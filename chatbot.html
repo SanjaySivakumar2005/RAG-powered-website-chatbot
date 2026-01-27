@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Website Chatbot</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .sidebar {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .chat-container {
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+            background: white;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .user-message {
+            background: #e3f2fd;
+            text-align: right;
+            margin-left: 20%;
+        }
+        .bot-message {
+            background: #f3e5f5;
+            margin-right: 20%;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .source-info {
+            background: #fff3e0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .demo-notice {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ffeaa7;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="demo-notice">
+            <strong>🚀 Demo Mode:</strong> This is a demonstration version. For full functionality, please set up the Python backend with your OpenAI API key.
+        </div>
+
+        <div class="header">
+            <h1>🤖 RAG Website Chatbot</h1>
+            <p>Ask questions about website content using AI-powered retrieval!</p>
+        </div>
+
+        <div style="display: flex; gap: 20px;">
+            <!-- Sidebar -->
+            <div style="flex: 0 0 300px;">
+                <div class="sidebar">
+                    <h3>⚙️ Configuration</h3>
+                    <div id="api-status" class="status status-success">
+                        ✅ Demo Mode Active
+                    </div>
+                    
+                    <h4>📥 Website Ingestion</h4>
+                    <input type="url" id="url-input" placeholder="https://example.com" style="width: 100%; margin-bottom: 10px; padding: 8px;">
+                    <button onclick="scrapeWebsite()" class="btn btn-primary" style="width: 100%;">🚀 Ingest Website</button>
+                    
+                    <div id="scrape-status"></div>
+                    
+                    <h4>📊 Statistics</h4>
+                    <div id="stats">
+                        <p>Pages scraped: <span id="page-count">0</span></p>
+                        <p>Content chunks: <span id="chunk-count">0</span></p>
+                    </div>
+                    
+                    <button onclick="clearData()" class="btn btn-secondary" style="width: 100%; margin-top: 10px;">🗑️ Clear Data</button>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div style="flex: 1;">
+                <div class="chat-container" id="chat-container">
+                    <div class="message bot-message">
+                        <strong>Bot:</strong> Hello! I'm your RAG chatbot demo. Try ingesting a website like https://www.python.org/about/ to see how it works!
+                    </div>
+                </div>
+                
+                <div class="input-container">
+                    <input type="text" id="chat-input" placeholder="Ask a question about the website..." onkeypress="handleKeyPress(event)">
+                    <button onclick="sendMessage()" class="btn btn-primary">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scrapedContent = '';
+        let currentUrl = '';
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        async function scrapeWebsite() {
+            const url = document.getElementById('url-input').value;
+            const statusDiv = document.getElementById('scrape-status');
+            
+            if (!url) {
+                statusDiv.innerHTML = '<div class="status status-error">Please enter a URL</div>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div class="status status-success">🔄 Simulating website scraping...</div>';
+            
+            // Simulate scraping delay
+            setTimeout(() => {
+                // Mock scraped content based on URL
+                let mockContent = '';
+                let mockTitle = '';
+                
+                if (url.includes('python.org')) {
+                    mockTitle = 'Welcome to Python.org';
+                    mockContent = 'Python is a programming language that lets you work quickly and integrate systems more effectively. Python is powerful and fast. Python is friendly and easy to learn. Python is open and free.';
+                } else if (url.includes('wikipedia.org')) {
+                    mockTitle = 'Wikipedia Article';
+                    mockContent = 'Wikipedia is a free-content online encyclopedia written and maintained by a community of volunteers, through a model of open collaboration, using a wiki-based editing system.';
+                } else {
+                    mockTitle = 'Website Content';
+                    mockContent = 'This is demo content from the website you entered. In the full version, this would contain the actual scraped content from the website.';
+                }
+                
+                scrapedContent = mockContent;
+                currentUrl = url;
+                
+                statusDiv.innerHTML = `<div class="status status-success">✅ Successfully scraped: ${mockTitle}</div>`;
+                document.getElementById('page-count').textContent = '1';
+                document.getElementById('chunk-count').textContent = '1';
+                
+                addMessage('bot', `Successfully scraped "${mockTitle}". You can now ask questions about the content!`);
+            }, 1500);
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            if (!scrapedContent) {
+                addMessage('bot', 'Please ingest a website first using the sidebar!');
+                return;
+            }
+            
+            addMessage('user', message);
+            input.value = '';
+            
+            // Show typing indicator
+            addMessage('bot', '🤔 Thinking...');
+            
+            // Simulate AI response
+            setTimeout(() => {
+                removeLastMessage();
+                
+                let response = '';
+                
+                // Generate mock responses based on keywords
+                if (message.toLowerCase().includes('python') && currentUrl.includes('python.org')) {
+                    response = 'Python is a versatile programming language known for its simplicity and power. It\'s widely used for web development, data science, artificial intelligence, and automation.';
+                } else if (message.toLowerCase().includes('what') && message.toLowerCase().includes('this')) {
+                    response = `This appears to be content from ${currentUrl}. The website discusses various topics related to its main subject matter.`;
+                } else if (message.toLowerCase().includes('how') || message.toLowerCase().includes('why')) {
+                    response = 'Based on the content I ingested, I can provide insights about the website\'s information. The full version would use AI to generate more detailed responses.';
+                } else {
+                    response = `This is a demo response to your question: "${message}". In the full version with OpenAI integration, I would provide detailed answers based on the actual website content.`;
+                }
+                
+                addMessage('bot', response, [{
+                    title: 'Demo Source',
+                    url: currentUrl
+                }]);
+            }, 1000);
+        }
+        
+        function addMessage(sender, content, sources = []) {
+            const container = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            let html = `<strong>${sender === 'user' ? 'You' : 'Bot'}:</strong> ${content}`;
+            
+            if (sources && sources.length > 0) {
+                html += '<div class="source-info">';
+                html += '<strong>📚 Sources:</strong><br>';
+                sources.forEach(source => {
+                    html += `• <a href="${source.url}" target="_blank">${source.title}</a><br>`;
+                });
+                html += '</div>';
+            }
+            
+            messageDiv.innerHTML = html;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function removeLastMessage() {
+            const container = document.getElementById('chat-container');
+            if (container.lastChild) {
+                container.removeChild(container.lastChild);
+            }
+        }
+        
+        function clearData() {
+            scrapedContent = '';
+            currentUrl = '';
+            document.getElementById('page-count').textContent = '0';
+            document.getElementById('chunk-count').textContent = '0';
+            document.getElementById('scrape-status').innerHTML = '';
+            document.getElementById('chat-container').innerHTML = `
+                <div class="message bot-message">
+                    <strong>Bot:</strong> Data cleared! Please ingest a website to get started.
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

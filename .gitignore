@@ -1,0 +1,17 @@
+# System files
+.DS_Store
+.env
+__pycache__/
+*.pyc
+
+# Local data (FAISS index)
+faiss_index/
+faiss_metadata.pkl
+
+# Exclude README as requested
+README.md
+
+# Python environment
+venv/
+.venv/
+env/
